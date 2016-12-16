@@ -67,19 +67,19 @@ with_mock(f = m, {
   expect_equal(f(iris), 1)
 })
 
-## ----expect_no_calls-----------------------------------------------------
+## ----expect_called-------------------------------------------------------
 m <- mock(1, 2)
 
 m()
-expect_no_calls(m, 1)
+expect_called(m, 1)
 
 m()
-expect_no_calls(m, 2)
+expect_called(m, 2)
 
-## ----expect_no_calls_error, eval=FALSE-----------------------------------
-#  expect_no_calls(m, 1)
+## ----expect_called_error, eval=FALSE-------------------------------------
+#  expect_called(m, 1)
 #  #> Error: mock object has not been called 1 time.
-#  expect_no_calls(m, 3)
+#  expect_called(m, 3)
 #  #> Error: mock object has not been called 3 times.
 
 ## ----expect_call---------------------------------------------------------
