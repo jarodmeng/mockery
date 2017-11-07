@@ -66,7 +66,44 @@ stub(some_function, 'namespace::function', 'some return value')
 
 This also works with R6 classes and methods.
 
+Finally, it's possible to specify the depth of stubbing. This is useful if you
+want to stub a function that isn't called directly by the function you call in
+you test but is called by a function that function calls. 
+
+In the example below, the function `g` is both called directly from `r`, which
+we call from the test, and from `f`, which `r` calls. By specifying a depth of
+2, we tell mockery to stub `g` in both places.
+
+```.R
+g = function(y) y
+f = function(x) g(x) + 1
+r = function(x) g(x) + f(x)
+test_that('demonstrate stubbing', {
+    stub(f, 'g', 100, depth=2)
+    expect_equal(r(1), 201)
+})
+```
+
 For more examples, please see the test code contained in this repository.
+
+##### Comparison to with_mock
+
+Mockery's `stub` function has similar functionality to testthat's `with_mock`.
+
+There are several use cases in which mockery's `stub` function will work, but
+testthat's `with_mock` will not.
+
+First, unlike `with_mock`, it seamlessly allows for mocking out primitives.
+
+Second, it is easy to stub out functions from base R packages with mockery's `stub`.
+Because of how `with_mock` works, you can get into trouble if you mock such functions 
+that the JIT compiler might try to use. These kinds of problems are avoided by `stub`'s
+design. As of version 2.0.0 of testthat, it will be impossible to mock functions from
+base R packages `with_mock`.
+
+The functionality of `stub` is just slightly different than that of `with_mock`. Instead
+of mocking out the object of interest for the duration of some code block, it mocks it
+out only when it is called from a specified function.
 
 #### Mocking
 

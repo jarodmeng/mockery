@@ -185,11 +185,23 @@ test_that('mock object accessing call expressions', {
 
 library(R6)
 
+some_other_class = R6Class("some_class",
+    public = list(
+        external_method = function() {return('this is external output')}
+    )
+)
+
 some_class = R6Class("some_class",
     public = list(
         some_method = function() {return(some_function())},
         some_method_prime = function() {return(some_function())},
-        other_method = function() {return('method in class')}
+        other_method = function() {return('method in class')},
+        method_without_other = function() { self$other_method() },
+        method_with_other = function() {
+          other <- some_other_class$new()
+          other$external_method()
+          self$other_method()
+        }
     )
 )
 
@@ -199,6 +211,16 @@ some_class = R6Class("some_class",
 test_that('stub works with R6 methods', {
     stub(obj$some_method, 'some_function', 'stub has been called')
     expect_equal(obj$some_method(), 'stub has been called')
+})
+
+test_that('stub works with R6 methods that call internal methods in them', {
+    stub(obj$method_without_other, 'self$other_method', 'stub has been called')
+    expect_equal(obj$method_without_other(), 'stub has been called')
+})
+
+test_that('stub works with R6 methods that have other objects in them', {
+    stub(obj$method_with_other, 'self$other_method', 'stub has been called')
+    expect_equal(obj$method_with_other(), 'stub has been called')
 })
 
 test_that('R6 method does not stay stubbed', {
@@ -242,3 +264,62 @@ test_that('stub multiple namespaced and R6 functions from within test env', {
     testthat::expect_failure(expect_equal(4, 5))
 })
 
+h = function(x) 'called h'
+g = function(x) h(x)
+f = function(x) g(x)
+test_that('use can specify depth of mocking', {
+    stub_string = 'called stub!'
+    stub(f, 'h', stub_string, depth=2)
+    expect_equal(f(1), stub_string)
+})
+
+h = function(x) 'called h'
+g = function(x) h(x)
+f = function(x) paste0(h(x), g(x))
+test_that('mocked function is mocked at all depths', {
+    stub_string = 'called stub!'
+    stub(f, 'h', stub_string, depth=2)
+    expect_equal(f(1), 'called stub!called stub!')
+})
+
+h = function(x) 'called h'
+g = function(x) h(x)
+r = function(x) g(x)
+f = function(x) paste0(h(x), r(x))
+test_that('mocked function is mocked at all depths', {
+    stub_string = 'called stub!'
+    stub(f, 'h', stub_string, depth=3)
+    expect_equal(f(1), 'called stub!called stub!')
+})
+
+h = function(x) 'called h'
+t = function(x) h(x)
+g = function(x) h(x)
+r = function(x) paste0(t(x), g(x))
+u = function(x) paste0(h(x), g(x))
+
+f = function(x) paste0(h(x), r(x), u(x))
+
+t_env = new.env(parent=baseenv())
+assign('h', h, t_env)
+environment(t) = t_env
+
+u_env = new.env(parent=baseenv())
+assign('g', g, u_env)
+assign('h', h, u_env)
+environment(u) = u_env
+
+f_env = new.env(parent=baseenv())
+assign('u', u, f_env)
+assign('h', h, f_env)
+assign('r', r, f_env)
+environment(f) = f_env
+
+a = function(x) x
+environment(a) = f_env
+
+test_that('mocked function is mocked at all depths across paths', {
+    stub_string = 'called stub!'
+    stub(f, 'h', stub_string, depth=4)
+    expect_equal(f(1), 'called stub!called stub!called stub!called stub!called stub!')
+})
