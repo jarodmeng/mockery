@@ -66,9 +66,11 @@ stub(some_function, 'namespace::function', 'some return value')
 
 This also works with R6 classes and methods.
 
-Finally, it's possible to specify the depth of stubbing. This is useful if you
+###### Depth
+
+It's possible to specify the depth of stubbing. This is useful if you
 want to stub a function that isn't called directly by the function you call in
-you test but is called by a function that function calls. 
+your test, but is instead called by a function that that function calls. 
 
 In the example below, the function `g` is both called directly from `r`, which
 we call from the test, and from `f`, which `r` calls. By specifying a depth of
@@ -79,7 +81,7 @@ g = function(y) y
 f = function(x) g(x) + 1
 r = function(x) g(x) + f(x)
 test_that('demonstrate stubbing', {
-    stub(f, 'g', 100, depth=2)
+    stub(r, 'g', 100, depth=2)
     expect_equal(r(1), 201)
 })
 ```
