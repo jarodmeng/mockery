@@ -16,8 +16,7 @@ Authors@R: c(
     )
 URL: https://github.com/n-s-f/mockery
 BugReports: https://github.com/n-s-f/mockery/issues
-Imports: testthat
-Suggests: knitr, rmarkdown (>= 1.0)
+Suggests: testthat, knitr, rmarkdown (>= 1.0)
 License: MIT + file LICENSE
 Collate: 'expectations.R' 'mockery.R' 'mock-object.R' 'stub.R'
 VignetteBuilder: knitr
